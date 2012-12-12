@@ -21,6 +21,12 @@ case class Commit(
         (cal.get(Calendar.YEAR), cal.get(Calendar.MONTH))
     }
 
+    lazy val yearWeek = {
+        val cal = Calendar.getInstance
+        cal.setTime(time)
+        (cal.get(Calendar.YEAR), cal.get(Calendar.WEEK_OF_YEAR))
+    }
+
     lazy val id = project
         .flatMap(p => story.map(s => "%s-%d".format(p, s)))
 }
