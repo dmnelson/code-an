@@ -52,7 +52,7 @@ case class FileChange(
             .map(p => p.substring(0, p.indexOf("/", 1)).replaceAll("/", "").replaceAll("\"", ""))
 
     def isTest() : Boolean = 
-        path.indexOf("Test") > 0
+        path.indexOf("Test") > 0 || path.indexOf("spec") > 0
 
     def isOfType(sufix: String) : Boolean =
         path.endsWith("." + sufix)
