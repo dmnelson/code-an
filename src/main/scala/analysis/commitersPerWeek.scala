@@ -14,8 +14,7 @@ class CommittersPerWeekAnalyzer extends Analyzer {
             .map { case (date, i) => (date, i.distinct.size) }
             .toArray
             .sortBy { case (date, commiters) => (date) }
-            .map { case ((year, week), commiters) => List(year, week, commiters)
-            }
+            .map { case ((year, week), commiters) => List(year, week, commiters) }
 
 
         Result(Seq("year", "week", "commiters"), d)

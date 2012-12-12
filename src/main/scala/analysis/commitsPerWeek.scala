@@ -8,7 +8,7 @@ class CommitsPerWeekAnalyzer extends Analyzer {
     def apply(data: RepoData, sc: SparkContext) = {
 
         val d = data.commits
-            .flatMap { case c => c.files.flatMap(fc => fc.workspace).map(ws => (c.yearWeek)) }
+            .map { _.yearWeek }
             .groupBy { case (date) => (date) }
             .map { case (date, i) => (date, i.size) }
             .toArray
