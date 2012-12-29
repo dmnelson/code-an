@@ -6,32 +6,23 @@ import com.thoughtworks.dod._
 
 class CheckinsPerStoryAnalyzer extends Analyzer {
     def apply(data: RepoData, sc: SparkContext) = {
-        val project = "JPN"
-
-        val jpnDefects = data.issues
-            .filter(i => i.typeOf == "Defect" && i.project == project && i.status == "Fixed")
-
-        val defectsWithCheckins = data.commits
-            .filter(c => c.project.map(_ == project).getOrElse(false))
-            .groupBy(c => c.story.getOrElse(0))
-            .cartesian(jpnDefects)
-            .filter { case ((story, commits), i) => story == i.story }
-            .map { case ((story, commits), i) => (i.id, commits.size) }
-            .toArray
-            .toMap
-
-
-        val defectsWithNoCheckins = jpnDefects.toArray
-            .filterNot(d => defectsWithCheckins.contains(d.id))
-            .map(d => (d.id, 0))
-
-        val defectsAndCheckins = (defectsWithCheckins.toList ++ defectsWithNoCheckins)
-            .sortBy { case (id, checkins) => - checkins }
-            .map(_.productIterator.toList)
-
-        Result(Seq("story", "checkins"),
-            defectsAndCheckins)
-
+        Result(Seq("story", "checkins", "added", "removed", "project"),
+            data.commits
+                .flatMap(c => c.files.map(f => (c.story, c.project, c.hash, f.added, f.removed)))
+                .groupBy{ case(story, project,_, _, _) => (story, project)}
+                .map { case ((story, project), changes) =>
+                    val count = changes.map{ case(_,_, hash,_, _) => hash}.distinct.length
+                    val (added: Int, removed: Int) = changes.foldLeft(0,0){
+                      case ((sumAdded, sumRemoved), (_, _, _, added, removed)) => 
+                        (sumAdded + added, sumRemoved + removed) 
+                    }
+                    (story, project, count, added, removed)
+                }
+                .toArray
+                .sortBy { case (_, _, count, _, _) => -count }
+                .map { case (story, project, count, added, removed) =>
+                List(story.getOrElse("-unknown-"), count, added, removed, project) })
     }
 
 }
+
